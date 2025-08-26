@@ -60,7 +60,11 @@ contract StandardNFTFactory is
         uint256 _creationFee,
         uint256 _referralRate
     ) Ownable(_initialOwner) CollectorHelper(_feeCollector) {
-        if(_initialOwner == address(0) || _nftImplementation == address(0)) revert ZeroAddress();
+        if(
+            _initialOwner == address(0) ||
+            _nftImplementation == address(0) ||
+            _feeCollector == address(0)
+        ) revert ZeroAddress();
 
         nftImplementation = _nftImplementation;
         creationFee = _creationFee;

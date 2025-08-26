@@ -74,7 +74,11 @@ contract VestingFactory is
         uint256 _creationFee,
         uint256 _referralRate
     ) Ownable(_initialOwner) CollectorHelper(_feeCollector) {
-        if(_initialOwner == address(0) || _lockerImplementation == address(0)) revert ZeroAddress();
+        if(
+            _initialOwner == address(0) || 
+            _lockerImplementation == address(0) ||
+            _feeCollector == address(0)
+        ) revert ZeroAddress();
 
         lockerImplementation = _lockerImplementation;
         creationFee = _creationFee;

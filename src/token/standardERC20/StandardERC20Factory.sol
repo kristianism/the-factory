@@ -61,7 +61,11 @@ contract StandardERC20Factory is
         address _feeCollector,
         uint256 _creationFee
     ) Ownable(_initialOwner) CollectorHelper(_feeCollector) {
-        if (_initialOwner == address(0) || _tokenImplementation == address(0)) revert ZeroAddress();
+        if (
+            _initialOwner == address(0) ||
+            _tokenImplementation == address(0) ||
+            _feeCollector == address(0)
+        ) revert ZeroAddress();
 
         tokenImplementation = _tokenImplementation;
         creationFee = _creationFee;
