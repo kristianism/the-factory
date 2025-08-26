@@ -1,35 +1,25 @@
 //SPDX-License-Identifier: BSL 1.1
 pragma solidity 0.8.28;
 
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@common/CommonErrors.sol";
 
 /**
  * @title Registration-Based Airdrop
  * @notice Users register on-chain, then claim tokens based on their registration.
  */
-contract RegistrationAirdrop is Ownable, ReentrancyGuard {
+contract RegistrationAirdrop is 
+    OwnableUpgradeable, 
+    ReentrancyGuardUpgradeable,
+    CommonErrors
+{
     using SafeERC20 for IERC20;
 
-    /// @notice The ERC20 token being airdropped.
-    IERC20 public immutable token;
-    
-    /// @notice Registration phase status
-    bool private registrationOpen;
-    /// @notice Claim phase status  
-    bool private claimingOpen;
-    
-    /// @notice Fixed amount per user
-    uint256 public baseAmount;
-    
-    /// @notice Total tokens allocated for airdrop
-    uint256 public totalAllocated;
-    /// @notice Total registered users
-    uint256 public totalRegistered;
-    
     /// @notice User registration data
     struct UserData {
         bool isRegistered;
@@ -37,12 +27,6 @@ contract RegistrationAirdrop is Ownable, ReentrancyGuard {
         uint256 amount;
         uint256 registrationTime;
     }
-    
-    /// @notice Mapping of user address to their data
-    mapping(address => UserData) public users;
-    
-    /// @notice Array of registered addresses (for admin purposes)
-    address[] private registeredUsers;
 
     /// @notice Thrown when user registration is already closed.
     error RegistrationClosed();
@@ -54,12 +38,6 @@ contract RegistrationAirdrop is Ownable, ReentrancyGuard {
     error NotRegistered();
     /// @notice Thrown when user has already claimed.
     error AlreadyClaimed();
-    /// @notice Thrown when address is zero.
-    error ZeroAddress();
-    /// @notice Thrown when amount is zero.
-    error ZeroAmount();
-    /// @notice Thrown when contract has insufficient funds for claim.
-    error InsufficientFunds();
 
     /// @notice Emitted when a user registers.
     event UserRegistered(address indexed user, uint256 amount, uint256 timestamp);
@@ -74,17 +52,46 @@ contract RegistrationAirdrop is Ownable, ReentrancyGuard {
     /// @notice Emitted when owner withdraws tokens.
     event TokensWithdrawn(address indexed owner, uint256 amount);
 
-    /// @notice Constructor to initialize the airdrop contract
+    /// @notice The ERC20 token being airdropped.
+    IERC20 public token;
+    
+    /// @notice Registration phase status
+    bool private registrationOpen;
+    /// @notice Claim phase status  
+    bool private claimingOpen;
+    
+    /// @notice Fixed amount per user
+    uint256 private baseAmount;
+    /// @notice Total tokens allocated for airdrop
+    uint256 private totalAllocated;
+    /// @notice Total registered users
+    uint256 private totalRegistered;
+    
+    /// @notice Array of registered addresses
+    address[] private registeredUsers;
+
+    /// @notice Mapping of user address to their data
+    mapping(address => UserData) private users;
+
+    /// @notice Disables the ability to call the initializer
+    constructor() {
+        _disableInitializers();
+    }
+
+    /// @notice Initialize the airdrop contract
     /// @param _token The ERC20 token address to be airdropped
     /// @param _owner The owner address with admin privileges
     /// @param _baseAmount The base amount allocated per user
-    constructor(
+    function initialize(
         address _token,
-        address _owner,
-        uint256 _baseAmount
-    ) Ownable(_owner) {
+        uint256 _baseAmount,
+        address _owner
+    ) external initializer {
         if (_token == address(0) || _owner == address(0)) revert ZeroAddress();
         if (_baseAmount == 0) revert ZeroAmount();
+
+        __Ownable_init(_owner);
+        __ReentrancyGuard_init();
 
         token = IERC20(_token);
         baseAmount = _baseAmount;
@@ -97,7 +104,7 @@ contract RegistrationAirdrop is Ownable, ReentrancyGuard {
         if (!registrationOpen) revert RegistrationClosed();
         if (users[msg.sender].isRegistered) revert AlreadyRegistered();
 
-        uint256 userAmount = _calculateAllocation(msg.sender);
+        uint256 userAmount = _calculateAllocation();
         
         users[msg.sender] = UserData({
             isRegistered: true,
@@ -114,6 +121,7 @@ contract RegistrationAirdrop is Ownable, ReentrancyGuard {
     }
 
     /// @notice Claim tokens after registration
+    /// @dev Make sure to exclude the contract on fee-on-transfer tokens
     function claim() external nonReentrant {
         if (!claimingOpen) revert ClaimingClosed();
         if (!users[msg.sender].isRegistered) revert NotRegistered();
@@ -130,7 +138,8 @@ contract RegistrationAirdrop is Ownable, ReentrancyGuard {
     }
 
     /// @notice Fixed allocation for a user
-    function _calculateAllocation(address user) internal view returns (uint256) {  
+    /// @dev Can be extended for more complex logic
+    function _calculateAllocation() internal view returns (uint256) {  
         return baseAmount;
     }
 
@@ -203,6 +212,16 @@ contract RegistrationAirdrop is Ownable, ReentrancyGuard {
     /// @notice Get claiming status
     function isClaimingOpen() external view returns (bool) {
         return claimingOpen;
+    }
+
+    /// @notice Get token address
+    function getTokenAddress() external view returns (address) {
+        return address(token);
+    }
+
+    /// @notice Get base amount per user
+    function getBaseAmount() external view returns (uint256) {
+        return baseAmount;
     }
 
     /// @notice Get total allocated tokens for airdrop
