@@ -20,5 +20,7 @@ abstract contract CommonErrors {
     error InvalidCollector();
     /// @notice Thrown when the input is invalid
     error InputCannotBeNull();
+    /// @notice Thrown when the contract has insufficient funds.
+    error InsufficientFunds();
     
 }
