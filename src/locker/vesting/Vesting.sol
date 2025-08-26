@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: BSL 1.1
 pragma solidity 0.8.28;
 
-import "@openzeppelin/contracts-upgradeable/finance/VestingWalletUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {VestingWalletUpgradeable} from "@openzeppelin/contracts-upgradeable/finance/VestingWalletUpgradeable.sol";
 
-import "@common/CommonErrors.sol";
-import "@common/CommonEvents.sol";
+import {CommonErrors} from "@common/CommonErrors.sol";
+import {CommonEvents} from "@common/CommonEvents.sol";
 
 /**
  * @title Vesting

@@ -22,7 +22,6 @@ contract StandardERC20Factory is
     CollectorHelper,
     Referral
 {
-    using SafeERC20 for IERC20;
 
     /// @notice Event emitted when a token is created on the platform.
     event TokenCreated(address indexed token, address indexed owner);

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: BSL 1.1
 pragma solidity 0.8.28;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
-
-import "@common/CommonErrors.sol";
-import "@common/CommonEvents.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {ERC20BurnableUpgradeable} from 
+    "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
+import {CommonErrors} from "@common/CommonErrors.sol";
+import {CommonEvents} from "@common/CommonEvents.sol";
 
 /**
  * @title Standard ERC20 Token

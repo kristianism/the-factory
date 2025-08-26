@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: BSL 1.1
 pragma solidity 0.8.28;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {ERC721Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import "@common/CommonErrors.sol";
-import "@common/CommonEvents.sol";
+import {CommonErrors} from "@common/CommonErrors.sol";
+import {CommonEvents} from "@common/CommonEvents.sol";
 
 /**
  * @title Standard NFT

@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: BSL 1.1
 pragma solidity 0.8.28;
 
-import "@openzeppelin/contracts/proxy/Clones.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Pausable.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-import "@standardNFT/StandardNFT.sol";
-import "@common/CollectorHelper.sol";
-import "@common/Referral.sol";
+import {StandardNFT} from "@standardNFT/StandardNFT.sol";
+import {CollectorHelper} from "@common/CollectorHelper.sol";
+import {Referral} from "@common/Referral.sol";
 
 /**
  * @title Standard NFT Factory
@@ -22,7 +22,6 @@ contract StandardNFTFactory is
     CollectorHelper,
     Referral
 {
-    using SafeERC20 for IERC20;
 
     /// @notice Emitted when a new NFT is created.
     event NFTCreated(address indexed nft, address indexed creator, uint256 nftId);
