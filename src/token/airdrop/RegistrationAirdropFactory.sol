@@ -15,14 +15,13 @@ import "@common/Referral.sol";
  * @notice This contract deploys a registration-based airdrop contract.
  * @dev Proxy implementation are Clones. Implementation is immutable and not upgradeable.
  */
-contract AirdropFactory is 
+contract RegistrationAirdropFactory is 
     Ownable,
     Pausable,
     ReentrancyGuard,
     CollectorHelper,
     Referral
 {
-    using SafeERC20 for IERC20;
 
     /// @notice Information of each airdrop
     struct AirdropInfo {
@@ -60,7 +59,11 @@ contract AirdropFactory is
         address _feeCollector,
         uint256 _creationFee
     ) Ownable(_initialOwner) CollectorHelper(_feeCollector) {
-        if (_initialOwner == address(0) || _airdropImplementation == address(0)) revert ZeroAddress();
+        if (
+            _initialOwner == address(0) ||
+            _airdropImplementation == address(0) || 
+            _feeCollector == address(0)
+        ) revert ZeroAddress();
 
         airdropImplementation = _airdropImplementation;
         creationFee = _creationFee;
@@ -80,10 +83,8 @@ contract AirdropFactory is
         uint256 _baseAmount,
         address _referrer
     ) external payable whenNotPaused nonReentrant returns (address airdrop) {
-        if(
-            _token == address(0) ||
-            _baseAmount == 0
-        ) revert InputCannotBeNull();
+        if(_token == address(0)) revert ZeroAddress();
+        if(_baseAmount == 0) revert ZeroAmount();
         if(msg.value < creationFee) revert InvalidFee();
 
         airdropCounter = airdropCounter + 1;
@@ -161,32 +162,32 @@ contract AirdropFactory is
         _unpause();
     }
 
-    /// @notice Get the total number of Tokens created.
-    function getTotalTokens() external view returns (uint256) {
+    /// @notice Get the total number of airdrops created.
+    function getTotalAirdrops() external view returns (uint256) {
         return airdropCounter;
     }
 
-    /// @notice Get the Token address by its ID.
+    /// @notice Get the airdrop address by its ID.
     /// @param airdropId The ID of the airdrop to retrieve.
-    function getTokenById(uint256 airdropId) external view returns (address) {
+    function getAirdropById(uint256 airdropId) external view returns (address) {
         return IdToAddress[airdropId];
     }
 
-    /// @notice Get all Tokens created by a specific creator.
+    /// @notice Get all airdrops created by a specific creator.
     /// @param creator The address of the creator to retrieve airdrops for.
-    function getTokensByCreator(address creator) external view returns (address[] memory) {
+    function getAirdropsByCreator(address creator) external view returns (address[] memory) {
         return creatorToAirdrop[creator];
     }
 
-    /// @notice Get the Token information by its address.
+    /// @notice Get the airdrop information by its address.
     /// @param airdrop The address of the airdrop to retrieve information for.
-    function getTokenInfo(address airdrop) external view returns (AirdropInfo memory) {
+    function getAirdropInfo(address airdrop) external view returns (AirdropInfo memory) {
         return airdropInfo[airdrop];
     }
 
-    /// @notice Validates if the Token address is valid.
+    /// @notice Validates if the airdrop address is valid.
     /// @param airdrop The address of the airdrop to validate.
-    function isValidToken(address airdrop) external view returns (bool) {
+    function isValidAirdrop(address airdrop) external view returns (bool) {
         return airdropInfo[airdrop].airdropAddress == airdrop;
     }
 }
