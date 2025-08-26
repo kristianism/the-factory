@@ -38,6 +38,8 @@ contract RegistrationAirdrop is
     error NotRegistered();
     /// @notice Thrown when user has already claimed.
     error AlreadyClaimed();
+    /// @notice Thrown when the length of two arrays do not match.
+    error LengthMismatch();
 
     /// @notice Emitted when a user registers.
     event UserRegistered(address indexed user, uint256 amount, uint256 timestamp);
@@ -145,7 +147,7 @@ contract RegistrationAirdrop is
 
     /// @notice Batch register multiple users
     function batchRegister(address[] calldata addresses, uint256[] calldata amounts) external onlyOwner {
-        if (addresses.length != amounts.length) revert("Array length mismatch");
+        if (addresses.length != amounts.length) revert LengthMismatch();
         
         for (uint256 i = 0; i < addresses.length; i++) {
             if (!users[addresses[i]].isRegistered) {
