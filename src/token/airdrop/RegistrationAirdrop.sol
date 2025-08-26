@@ -18,11 +18,11 @@ contract RegistrationAirdrop is Ownable, ReentrancyGuard {
     IERC20 public immutable token;
     
     /// @notice Registration phase status
-    bool public registrationOpen;
+    bool private registrationOpen;
     /// @notice Claim phase status  
-    bool public claimingOpen;
+    bool private claimingOpen;
     
-    /// @notice Fixed amount per user or dynamic calculation
+    /// @notice Fixed amount per user
     uint256 public baseAmount;
     
     /// @notice Total tokens allocated for airdrop
@@ -121,27 +121,21 @@ contract RegistrationAirdrop is Ownable, ReentrancyGuard {
 
         uint256 amount = users[msg.sender].amount;
         if (amount == 0) revert ZeroAmount();
-
         if (token.balanceOf(address(this)) < amount) revert InsufficientFunds();
 
         users[msg.sender].hasClaimed = true;
-
         token.safeTransfer(msg.sender, amount);
 
         emit Claimed(msg.sender, amount);
     }
 
-    /// @notice Calculate allocation for a user
-    function _calculateAllocation(address user) internal view returns (uint256) {
-
-        // TODO: Implement dynamic allocation logic here.
-        
+    /// @notice Fixed allocation for a user
+    function _calculateAllocation(address user) internal view returns (uint256) {  
         return baseAmount;
     }
 
     /// @notice Batch register multiple users
-    function batchRegister(address[] calldata addresses, uint256[] calldata amounts) 
-        external onlyOwner {
+    function batchRegister(address[] calldata addresses, uint256[] calldata amounts) external onlyOwner {
         if (addresses.length != amounts.length) revert("Array length mismatch");
         
         for (uint256 i = 0; i < addresses.length; i++) {
@@ -192,12 +186,6 @@ contract RegistrationAirdrop is Ownable, ReentrancyGuard {
         emit TokensWithdrawn(owner(), _amount);
     }
 
-    /// @notice Get user registration data
-    /// @param user The address of the user
-    function getUserData(address user) external view returns (UserData memory) {
-        return users[user];
-    }
-
     /// @notice Check if user can claim
     /// @param user The address of the user
     function canClaim(address user) external view returns (bool) {
@@ -207,11 +195,36 @@ contract RegistrationAirdrop is Ownable, ReentrancyGuard {
                users[user].amount > 0;
     }
 
+    /// @notice Get registration status
+    function isRegistrationOpen() external view returns (bool) {
+        return registrationOpen;
+    }
+
+    /// @notice Get claiming status
+    function isClaimingOpen() external view returns (bool) {
+        return claimingOpen;
+    }
+
+    /// @notice Get total allocated tokens for airdrop
+    function getTotalAllocated() external view returns (uint256) {
+        return totalAllocated;
+    }
+
+    /// @notice Get total registered users
+    function getTotalRegistered() external view returns (uint256) {
+        return totalRegistered;
+    }
+
+    /// @notice Get user registration data
+    /// @param user The address of the user
+    function getUserData(address user) external view returns (UserData memory) {
+        return users[user];
+    }
+
     /// @notice Get all registered users
     /// @param offset The starting index
     /// @param limit The maximum number of users to return
-    function getRegisteredUsers(uint256 offset, uint256 limit) 
-        external view returns (address[] memory) {
+    function getRegisteredUsers(uint256 offset, uint256 limit) external view returns (address[] memory) {
         if (offset >= registeredUsers.length) {
             return new address[](0);
         }
