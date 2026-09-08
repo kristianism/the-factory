@@ -1,15 +1,15 @@
-// SPDX-License-Identifier: BSL 1.1
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.36;
 
-import "@openzeppelin/contracts/proxy/Clones.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/access/Ownable2Step.sol";
-import "@openzeppelin/contracts/utils/Pausable.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
+import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-import "@standardERC20/StandardERC20.sol";
-import "@common/CollectorHelper.sol";
-import "@common/Referral.sol";
+import {StandardERC20} from "@standardERC20/StandardERC20.sol";
+import {CollectorHelper} from "@common/CollectorHelper.sol";
+import {Referral} from "@common/Referral.sol";
 
 /**
  * @title Standard ERC20 Factory

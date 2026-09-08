@@ -1,4 +1,4 @@
-//SPDX-License-Identifier: BSL 1.1
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.36;
 
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
@@ -8,7 +8,6 @@ import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import {StandardYieldFarm} from "@standardYield/StandardYieldFarm.sol";
 import {CollectorHelper} from "@common/CollectorHelper.sol";
@@ -19,8 +18,6 @@ import {CollectorHelper} from "@common/CollectorHelper.sol";
  * @dev Proxy implementation are Clones. Implementation is immutable and not upgradeable.
  */
 contract StandardYieldFarmFactory is Ownable2Step, Pausable, ReentrancyGuard, CollectorHelper {
-    using SafeERC20 for IERC20;
-
     /// @notice Thrown when the start timestamp is not in the future
     error InvalidTimestamp();
 

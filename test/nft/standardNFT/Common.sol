@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.36;
 
-import "forge-std/Test.sol";
-import "forge-std/console.sol";
+import {Test} from "forge-std/Test.sol";
 
-import "@standardNFT/StandardNFTFactory.sol";
-import "@standardNFT/StandardNFT.sol";
+import {StandardNFTFactory} from "@standardNFT/StandardNFTFactory.sol";
+import {StandardNFT} from "@standardNFT/StandardNFT.sol";
 
 contract Common is Test {
     StandardNFTFactory public factory;

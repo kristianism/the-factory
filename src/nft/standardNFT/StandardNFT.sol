@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BSL 1.1
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.36;
 
 import {ERC721Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
