@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: BSL 1.1
-pragma solidity 0.8.28;
+pragma solidity 0.8.36;
 
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/Ownable2Step.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
@@ -15,14 +16,7 @@ import "@common/Referral.sol";
  * @notice This contract clones a standard ERC20 token implementation.
  * @dev Proxy implementation are Clones. Implementation is immutable and not upgradeable.
  */
-contract StandardERC20Factory is 
-    Ownable,
-    Pausable,
-    ReentrancyGuard,
-    CollectorHelper,
-    Referral
-{
-
+contract StandardERC20Factory is Ownable2Step, Pausable, ReentrancyGuard, CollectorHelper, Referral {
     /// @notice Event emitted when a token is created on the platform.
     event TokenCreated(address indexed token, address indexed owner);
 
@@ -54,75 +48,60 @@ contract StandardERC20Factory is
     /// @param _initialOwner The initial owner of the contract.
     /// @param _feeCollector The address that collects the fees.
     /// @param _creationFee The amount to collect for every contract creation.
-    constructor(
-        address _tokenImplementation,
-        address _initialOwner,
-        address _feeCollector,
-        uint256 _creationFee
-    ) Ownable(_initialOwner) CollectorHelper(_feeCollector) {
-        if (
-            _initialOwner == address(0) ||
-            _tokenImplementation == address(0) ||
-            _feeCollector == address(0)
-        ) revert ZeroAddress();
+    constructor(address _tokenImplementation, address _initialOwner, address _feeCollector, uint256 _creationFee)
+        Ownable(_initialOwner)
+        CollectorHelper(_feeCollector)
+    {
+        if (_initialOwner == address(0) || _tokenImplementation == address(0) || _feeCollector == address(0)) {
+            revert ZeroAddress();
+        }
 
+        if (_tokenImplementation.code.length == 0) revert InvalidImplementationAddress();
         tokenImplementation = _tokenImplementation;
         creationFee = _creationFee;
 
         _pause();
     }
 
-    /// @notice This function allows the contract to receive ETH. 
+    /// @notice This function allows the contract to receive ETH.
     receive() external payable {}
 
     /// @notice This function is called to create a new token
     /// @param name The name of the token
     /// @param symbol The symbol of the token
     /// @param initialSupply The initial supply of the token
-    function createToken(
-        string memory name,
-        string memory symbol,
-        uint256 initialSupply,
-        address _referrer
-    ) external payable whenNotPaused nonReentrant returns (address token) {
-        if(
-            bytes(name).length == 0 || 
-            bytes(symbol).length == 0
-        ) revert InputCannotBeNull();
-        if(msg.value < creationFee) revert InvalidFee();
+    function createToken(string memory name, string memory symbol, uint256 initialSupply, address _referrer)
+        external
+        payable
+        whenNotPaused
+        nonReentrant
+        returns (address token)
+    {
+        if (bytes(name).length == 0 || bytes(symbol).length == 0) revert InputCannotBeNull();
+        if (msg.value < creationFee) revert InvalidFee();
 
         tokenCounter = tokenCounter + 1;
 
         token = Clones.clone(tokenImplementation);
 
-        StandardERC20(token).initialize(
-            name, 
-            symbol, 
-            initialSupply, 
-            msg.sender
-        );
+        StandardERC20(token).initialize(name, symbol, initialSupply, msg.sender);
 
         IdToAddress[tokenCounter] = token;
         creatorToTokens[msg.sender].push(token);
 
-        tokenInfo[token] = TokenInfo({
-            tokenAddress: token,
-            creator: msg.sender,
-            name: name,
-            symbol: symbol,
-            tokenId: tokenCounter
-        });
+        tokenInfo[token] =
+            TokenInfo({tokenAddress: token, creator: msg.sender, name: name, symbol: symbol, tokenId: tokenCounter});
 
         uint256 excessEth = msg.value - creationFee;
 
         // Refund excess ETH if any.
-        if(excessEth > 0) {
-            (bool success, ) = msg.sender.call{value: excessEth}("");
+        if (excessEth > 0) {
+            (bool success,) = msg.sender.call{value: excessEth}("");
             require(success, "Failed to refund excess ETH");
         }
 
         // Distribute referral if applicable
-        if(_referrer != address(0) && _referrer != msg.sender && referralRate > 0 && creationFee > 0) {
+        if (_referrer != address(0) && _referrer != msg.sender && referralRate > 0 && creationFee > 0) {
             _distributeReferral(_referrer, creationFee);
         }
 
@@ -130,41 +109,41 @@ contract StandardERC20Factory is
     }
 
     /// @notice This function allows the fee collector to collect the fees.
-    function collectFees() external onlyCollector {
+    function collectFees() external onlyCollector nonReentrant {
         _collectFees();
     }
 
     /// @notice This function allows the fee collector to collect foreign tokens sent to the contract.
     /// @param token The address of the token to collect.
-    function collectTokens(address token) external onlyOwner {
+    function collectTokens(address token) external onlyOwner nonReentrant {
         _collectTokens(token);
     }
 
     /// @notice This function sets the fee collector address.
     /// @param newFeeCollector The new address for the fee collector.
-    function setFeeCollector(address newFeeCollector) external onlyOwner {
+    function setFeeCollector(address newFeeCollector) external onlyOwner nonReentrant {
         _setFeeCollector(newFeeCollector);
     }
 
     /// @notice This function sets the creation fee.
-    function setCreationFee(uint256 _creationFee) external onlyOwner {
+    function setCreationFee(uint256 _creationFee) external onlyOwner nonReentrant {
         creationFee = _creationFee;
         emit CreationFeeUpdated(_creationFee);
     }
 
     /// @notice This function sets the referral rate.
     /// @param _referralRate The new referral rate in basis points (0..10_000).
-    function setReferralRate(uint256 _referralRate) external onlyOwner {
+    function setReferralRate(uint256 _referralRate) external onlyOwner nonReentrant {
         _setReferralRate(_referralRate);
     }
 
     /// @notice This function allows the owner to pause the contract.
-    function pause() external onlyOwner {
+    function pause() external onlyOwner nonReentrant {
         _pause();
     }
 
     /// @notice This function allows the owner to unpause the contract.
-    function unpause() external onlyOwner {
+    function unpause() external onlyOwner nonReentrant {
         _unpause();
     }
 
@@ -194,6 +173,6 @@ contract StandardERC20Factory is
     /// @notice Validates if the Token address is valid.
     /// @param token The address of the token to validate.
     function isValidToken(address token) external view returns (bool) {
-        return tokenInfo[token].tokenAddress == token;
+        return token != address(0) && tokenInfo[token].tokenAddress == token;
     }
 }

@@ -1,10 +1,11 @@
 //SPDX-License-Identifier: BSL 1.1
-pragma solidity 0.8.28;
+pragma solidity 0.8.36;
 
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
@@ -12,13 +13,13 @@ import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProo
  * @title Merkle Tree Airdrop
  * @notice This contract allows users to claim ERC20 tokens based on a Merkle proof.
  */
-contract MerkleAirdrop is Ownable, ReentrancyGuard {
+contract MerkleAirdrop is Ownable2Step, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     /// @notice The ERC20 token being airdropped.
     IERC20 public immutable token;
     /// @notice The merkle root for the airdrop.
-    bytes32 private root;
+    bytes32 public root;
     /// @notice Mapping for address and bool if user has claimed.
     mapping(address => bool) public hasClaimed;
 
@@ -44,14 +45,11 @@ contract MerkleAirdrop is Ownable, ReentrancyGuard {
     /// @param _root The merkle root for the airdrop.
     /// @param _token The address of the ERC20 token being airdropped.
     /// @param _owner The address of the contract owner.
-    constructor(
-        bytes32 _root,
-        address _token,
-        address _owner
-    ) Ownable(_owner) {
+    constructor(bytes32 _root, address _token, address _owner) Ownable(_owner) {
         if (_root == bytes32(0)) revert InvalidRoot();
         if (_token == address(0) || _owner == address(0)) revert ZeroAddress();
 
+        if (_token.code.length == 0) revert ZeroAddress();
         root = _root;
         token = IERC20(_token);
     }
@@ -59,16 +57,13 @@ contract MerkleAirdrop is Ownable, ReentrancyGuard {
     /// @notice Allows a user to claim their tokens if they have a valid merkle proof.
     /// @param proof The merkle proof for the user's claim.
     /// @param amount The amount of tokens the user is claiming.
-    function claim(
-        bytes32[] calldata proof,
-        uint256 amount
-    ) external nonReentrant {
+    function claim(bytes32[] calldata proof, uint256 amount) external nonReentrant {
         if (hasClaimed[msg.sender]) revert AlreadyClaimed();
         if (amount == 0) revert ZeroAmount();
 
         /// @dev Verify the merkle proof.
         _verifyProof(proof, msg.sender, amount);
-        
+
         /// @dev Mark the user as having claimed.
         hasClaimed[msg.sender] = true;
         /// @dev Transfer the tokens to the user.
@@ -79,7 +74,7 @@ contract MerkleAirdrop is Ownable, ReentrancyGuard {
     }
 
     /// @notice Withdraws tokens from the contract to the owner.
-    function withdrawToken(uint256 _amount) external onlyOwner {
+    function withdrawToken(uint256 _amount) external onlyOwner nonReentrant {
         if (_amount == 0) revert ZeroAmount();
 
         /// @dev Transfer the tokens to the owner.
@@ -90,8 +85,8 @@ contract MerkleAirdrop is Ownable, ReentrancyGuard {
     }
 
     /// @notice Changes the merkle root.
-    function setMerkleRoot(bytes32 _root) external onlyOwner {
-        if(_root == bytes32(0)) revert InvalidRoot();
+    function setMerkleRoot(bytes32 _root) external onlyOwner nonReentrant {
+        if (_root == bytes32(0)) revert InvalidRoot();
 
         /// @dev Change the merkle root.
         root = _root;
@@ -101,38 +96,18 @@ contract MerkleAirdrop is Ownable, ReentrancyGuard {
     }
 
     /// @notice Check if an address can claim tokens.
-    function canClaim(
-        bytes32[] calldata proof,
-        uint256 amount,
-        address addr
-    ) external view returns (bool) {
+    function canClaim(bytes32[] calldata proof, uint256 amount, address addr) external view returns (bool) {
         if (hasClaimed[addr]) return false;
         if (amount == 0) return false;
 
-        bytes32 leaf = keccak256(
-            bytes.concat(
-                keccak256(
-                    abi.encode(addr, amount)
-                )
-            )
-        );
+        bytes32 leaf = keccak256(bytes.concat(keccak256(abi.encode(addr, amount))));
 
         return MerkleProof.verifyCalldata(proof, root, leaf);
     }
 
     /// @notice Verifies the merkle proof for a given address and amount.
-    function _verifyProof(
-        bytes32[] calldata proof,
-        address addr,
-        uint256 amount
-    ) internal view {
-        bytes32 leaf = keccak256(
-            bytes.concat(
-                keccak256(
-                    abi.encode(addr, amount)
-                )
-            )
-        );
+    function _verifyProof(bytes32[] calldata proof, address addr, uint256 amount) internal view {
+        bytes32 leaf = keccak256(bytes.concat(keccak256(abi.encode(addr, amount))));
 
         if (!MerkleProof.verifyCalldata(proof, root, leaf)) revert InvalidProof();
     }

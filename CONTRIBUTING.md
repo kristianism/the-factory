@@ -1,27 +1,9 @@
-# Contributing to Sonic Factory
+# Contributing to The Factory
 
-Thank you for considering contributing to Sonic Factory!
+Open issues and pull requests at https://github.com/kristianism/the-factory.
 
-## How to Contribute
+Keep templates small. Explain the end user's goal, parameters, units, owner powers, external dependencies, and irreversible actions. Prefer a separate template over another mode flag when the risks or permissions differ materially.
 
-- Fork the repository
-- Create a new branch
-- Commit your changes with clear messages
-- Submit a pull request
+For contract changes, include a regression test demonstrating the old failure and the intended behavior. Run the formatting, build, and test commands in the README. Never include signing keys or production secrets in commits or test fixtures.
 
-Alternatively, email us at sonicfactorycrypto@gmail.com with a description of your changes.
-
-## Contribution License
-
-By submitting a contribution, you agree that:
-
-- You have the right to submit the work under the Business Source License.
-- The contribution will be licensed under the same license as the rest of the project.
-
-If you're submitting substantial changes, we may ask you to sign a simple Contributor License Agreement (CLA) for legal clarity.
-
-## Reporting Bugs or Suggestions
-
-Open an issue on the GitHub repo or email sonicfactorycrypto@gmail.com
-
-We appreciate your help in building Sonic Factory!
+Contributions remain subject to the repository's existing LICENSE. Product renaming does not alter inherited legal notices or contribution obligations. Report suspected vulnerabilities privately to the repository owner rather than publishing exploit details in a public issue.

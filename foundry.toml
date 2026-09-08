@@ -1,10 +1,16 @@
 [profile.default]
 src = "src"
 out = "out"
-libs = ["lib"]
+libs = ["lib", "node_modules"]
+solc = "0.8.36"
+evm_version = "cancun"
+optimizer = true
+optimizer_runs = 200
+# Forward-compatibility identifier warnings in pinned upstream dependencies.
+ignored_error_codes = [6335]
 
-[etherscan]
-sonic-testnet = { key = "{$SONICSCAN_API_KEY}", chain = "14601", url = "${TESTNET_API_URL}" }
-sonic-mainnet = { key = "{$SONICSCAN_API_KEY}", chain = "146", url = "${SONICSCAN_API_URL}" }
+[profile.ci.fuzz]
+runs = 1000
 
-# See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
+[fmt]
+line_length = 120

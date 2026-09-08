@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.36;
 
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
@@ -8,7 +8,6 @@ import "@standardNFT/StandardNFTFactory.sol";
 import "@standardNFT/StandardNFT.sol";
 
 contract Common is Test {
- 
     StandardNFTFactory public factory;
     StandardNFT public nft;
 
@@ -19,7 +18,6 @@ contract Common is Test {
     address public collector = makeAddr("collector");
 
     function setUp() public virtual {
-
         // Deploy the protocol
         nft = new StandardNFT();
         factory = new StandardNFTFactory(

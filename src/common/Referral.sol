@@ -1,8 +1,9 @@
 //SPDX-License-Identifier: BSL 1.1
-pragma solidity 0.8.28;
+pragma solidity 0.8.36;
+
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 abstract contract Referral {
-
     /// @notice Referral rate in basis points (0..10_000)
     uint256 internal referralRate;
     /// @notice Maximum referral rate allowed (10_000 = 100%)
@@ -19,7 +20,7 @@ abstract contract Referral {
     /// @notice Internal setter for referral rate. Factories should expose an onlyOwner wrapper.
     /// @dev _referralRate must be <= 10_000.
     function _setReferralRate(uint256 _referralRate) internal {
-        if(_referralRate > MAX_REFERRAL_RATE) revert InvalidReferralRate(_referralRate);
+        if (_referralRate > MAX_REFERRAL_RATE) revert InvalidReferralRate(_referralRate);
         referralRate = _referralRate;
 
         emit ReferralRateUpdated(_referralRate);
@@ -30,18 +31,18 @@ abstract contract Referral {
     /// @param fee The fee amount (in wei) to split.
     /// @return remainder The amount remaining after referral payout (kept by factory).
     function _distributeReferral(address referrer, uint256 fee) internal returns (uint256 remainder) {
-        if (referrer == address(0) || referralRate == 0 || fee == 0) {
+        if (referrer == address(0) || referrer == msg.sender || referralRate == 0 || fee == 0) {
             return fee;
         }
 
-        uint256 referralAmount = (fee * referralRate) / 10_000;
+        uint256 referralAmount = Math.mulDiv(fee, referralRate, 10_000);
 
         if (referralAmount == 0) {
             return fee;
         }
 
         // Attempt to send referral payment immediately
-        (bool sent, ) = referrer.call{value: referralAmount}("");
+        (bool sent,) = referrer.call{value: referralAmount, gas: 100_000}("");
         if (sent) {
             emit ReferralPaid(referrer, referralAmount, msg.sender);
             return fee - referralAmount;

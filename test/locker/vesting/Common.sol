@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.36;
 
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
@@ -9,7 +9,6 @@ import "@vesting/VestingFactory.sol";
 import "./mocks/MockERC20.sol";
 
 contract Common is Test {
- 
     VestingFactory public factory;
     Vesting public vesting;
     MockERC20 public token;

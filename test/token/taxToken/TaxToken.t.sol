@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.36;
 
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
@@ -8,15 +8,14 @@ import "@taxToken/TaxToken.sol";
 import "@taxToken/TaxTokenFactory.sol";
 
 contract TaxTokenTest is Test {
-
     address public owner = makeAddr("owner");
     address public user = makeAddr("user");
     address public taxBeneficiary = makeAddr("taxBeneficiary");
     address public feeCollector = makeAddr("feeCollector");
-    
+
     string constant TOKEN_NAME = "Test Token";
     string constant TOKEN_SYMBOL = "TTK";
-    
+
     uint256 constant INITIAL_SUPPLY = 1_000_000 * 10 ** 18; // 1 million tokens with 18 decimals
     uint256 constant TRANSFER_AMOUNT = 1_000 * 10 ** 18; // 1 thousand tokens with 18 decimals
     uint256 constant TRANSFER_TAX_RATE = 500; // 5% tax rate in basis points
@@ -27,21 +26,16 @@ contract TaxTokenTest is Test {
     TaxTokenFactory public taxTokenFactory;
 
     TaxToken public tokenA;
-    
+
     function setUp() public {
         vm.deal(owner, 10 ether);
         vm.deal(user, 10 ether);
-        
+
         vm.startPrank(owner);
 
         // Initialize the contracts
         taxToken = new TaxToken();
-        taxTokenFactory = new TaxTokenFactory(
-            address(taxToken),
-            owner,
-            feeCollector,
-            CREATION_FEE
-        );
+        taxTokenFactory = new TaxTokenFactory(address(taxToken), owner, feeCollector, CREATION_FEE);
 
         // Unpause the factory to allow token creation
         taxTokenFactory.unpause();
@@ -49,12 +43,7 @@ contract TaxTokenTest is Test {
         // Create a new TaxToken using the factory
         tokenA = TaxToken(
             taxTokenFactory.createToken{value: CREATION_FEE}(
-                TOKEN_NAME,
-                TOKEN_SYMBOL,
-                INITIAL_SUPPLY,
-                TRANSFER_TAX_RATE,
-                taxBeneficiary,
-                address(0)
+                TOKEN_NAME, TOKEN_SYMBOL, INITIAL_SUPPLY, TRANSFER_TAX_RATE, taxBeneficiary, address(0)
             )
         );
 
@@ -75,11 +64,10 @@ contract TaxTokenTest is Test {
 
         // Check the tax beneficiary address
         assertEq(tokenA.taxBeneficiary(), taxBeneficiary, "Tax beneficiary address mismatch");
-    
+
         // Check No Tax Receipient and Sender
         assertTrue(tokenA.noTaxRecipient(owner), "User should be a no tax recipient");
         assertTrue(tokenA.noTaxSender(owner), "User should be a no tax sender");
-    
     }
 
     function test_mint() public {
@@ -159,7 +147,7 @@ contract TaxTokenTest is Test {
         tokenA.transfer(user, TRANSFER_AMOUNT);
         assertEq(tokenA.balanceOf(owner), INITIAL_SUPPLY - TRANSFER_AMOUNT, "Transfer failed");
         assertEq(tokenA.balanceOf(user), TRANSFER_AMOUNT, "User balance mismatch after transfer");
-    
+
         vm.stopPrank();
     }
 
@@ -174,10 +162,12 @@ contract TaxTokenTest is Test {
         uint256 netAmount = TRANSFER_AMOUNT - taxAmount;
 
         tokenA.transfer(user, TRANSFER_AMOUNT);
-        
+
         assertEq(tokenA.balanceOf(owner), INITIAL_SUPPLY - TRANSFER_AMOUNT, "Transfer failed");
         assertEq(tokenA.balanceOf(user), netAmount, "User balance mismatch after transfer with tax");
-        assertEq(tokenA.balanceOf(taxBeneficiary), taxAmount, "Tax beneficiary balance mismatch after transfer with tax");
+        assertEq(
+            tokenA.balanceOf(taxBeneficiary), taxAmount, "Tax beneficiary balance mismatch after transfer with tax"
+        );
 
         vm.stopPrank();
     }
@@ -220,7 +210,7 @@ contract TaxTokenTest is Test {
         // Update the tax beneficiary address
         address newTaxBeneficiary = makeAddr("newTaxBeneficiary");
         tokenA.updateTaxBeneficiary(newTaxBeneficiary);
-        
+
         assertEq(tokenA.taxBeneficiary(), newTaxBeneficiary, "Tax beneficiary update failed");
         assertTrue(tokenA.noTaxRecipient(newTaxBeneficiary), "New tax beneficiary should be a no tax recipient");
         assertTrue(tokenA.noTaxSender(newTaxBeneficiary), "New tax beneficiary should be a no tax sender");
@@ -314,5 +304,5 @@ contract TaxTokenTest is Test {
         tokenA.setNoTaxRecipientAddr(user, true);
 
         vm.stopPrank();
-    }   
+    }
 }

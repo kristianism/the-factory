@@ -1,8 +1,7 @@
 //SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.36;
 
 contract MockFactory {
-
     address public feeCollector;
 
     modifier onlyCollector() {
@@ -21,7 +20,7 @@ contract MockFactory {
     function collectFees() external onlyCollector {
         uint256 fees = pendingFees();
         require(fees > 0, "No fees to collect");
-        
+
         // Simulate fee collection logic
         payable(feeCollector).transfer(fees);
     }

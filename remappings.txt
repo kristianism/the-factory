@@ -7,3 +7,4 @@
 @treasury/=src/treasury
 @standardYield/=src/yield/standardYieldFarm
 @airdrop/=src/token/airdrop
+forge-std/=lib/forge-std/src/

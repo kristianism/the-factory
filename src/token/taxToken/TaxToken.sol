@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: BSL 1.1
-pragma solidity 0.8.28;
+pragma solidity 0.8.36;
 
-import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {ERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {Ownable2StepUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
+
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import {CommonErrors} from "@common/CommonErrors.sol";
 import {CommonEvents} from "@common/CommonEvents.sol";
@@ -12,14 +14,7 @@ import {CommonEvents} from "@common/CommonEvents.sol";
  * @title Tax Token
  * @notice This contract implements an ERC20 token with a transfer tax mechanism.
  */
-contract TaxToken is 
-    Initializable,
-    ERC20Upgradeable,
-    OwnableUpgradeable,
-    CommonErrors,
-    CommonEvents
-{
-
+contract TaxToken is Initializable, ERC20Upgradeable, Ownable2StepUpgradeable, CommonErrors, CommonEvents {
     /// @notice Thrown when the tax rate exceeds the maximum tax rate
     error TaxRateExceedsMax();
 
@@ -33,7 +28,7 @@ contract TaxToken is
     event SetNoTaxRecipientAddr(address indexed owner, address indexed noTaxRecipientAddr, bool _value);
 
     /// @notice Scaling factor for decimal precision.
-    uint256 public constant SCALING_FACTOR = 10_000; 
+    uint256 public constant SCALING_FACTOR = 10_000;
     /// @notice The tax limit by default (20%)
     uint256 public constant MAXIMUM_TAX = 2_000;
     /// @notice Transfer tax rate in basis points. (default = 5%)
@@ -57,19 +52,18 @@ contract TaxToken is
     /// @param _initialSupply Number of tokens to be minted. Expressed in wei.
     /// @param _transferTaxRate Transfer tax rate to be imposed. Expressed in basis points (ex. 1_000 = 10%).
     function initialize(
-
         string memory _name,
         string memory _symbol,
         uint256 _initialSupply,
         uint256 _transferTaxRate,
         address _taxBeneficiary,
         address _owner
-
     ) external initializer {
         if (_transferTaxRate > MAXIMUM_TAX) revert TaxRateExceedsMax();
         if (_taxBeneficiary == address(0)) revert ZeroAddress();
 
         __ERC20_init(_name, _symbol);
+        __Ownable2Step_init();
         __Ownable_init(_owner);
 
         transferTaxRate = _transferTaxRate;
@@ -103,21 +97,13 @@ contract TaxToken is
 
     /// @notice Overrides transfer function to meet tokenomics of tax token
     function _update(address from, address to, uint256 value) internal virtual override {
-        
-        uint256 taxAmount = (value * transferTaxRate + SCALING_FACTOR - 1) / SCALING_FACTOR;
-        uint256 sendAmount = value - taxAmount;
-
-        if (taxAmount == 0 || noTaxRecipient[to] == true || noTaxSender[from] == true || from == address(0) || to == address(0)) {
-
-            // Transfer with no Tax
-            super._update(from, to, value);  
-            
-        } else {
-
-            // Transfer with tax, sends the tax amount to beneficiary and the net amount to recipient
-            super._update(from, taxBeneficiary, taxAmount);
-            super._update(from, to, sendAmount);
+        if (noTaxRecipient[to] || noTaxSender[from] || from == address(0) || to == address(0)) {
+            super._update(from, to, value);
+            return;
         }
+        uint256 taxAmount = Math.mulDiv(value, transferTaxRate, SCALING_FACTOR, Math.Rounding.Ceil);
+        if (taxAmount > 0) super._update(from, taxBeneficiary, taxAmount);
+        super._update(from, to, value - taxAmount);
     }
 
     /// @notice External privileged function to update the transfer tax rate up to the maximum tax rate set.

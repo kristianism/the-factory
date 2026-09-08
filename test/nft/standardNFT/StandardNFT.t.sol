@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.36;
 
 import "./Common.sol";
 
 contract StandardNFTTest is Common {
-
     function test_factoryDeployment() public view {
         assertEq(address(factory.nftImplementation()), address(nft));
         assertEq(factory.feeCollector(), collector);
@@ -20,12 +19,14 @@ contract StandardNFTTest is Common {
         string memory baseURI = "https://example.com/metadata.json/";
 
         vm.startPrank(user);
-        newNft = StandardNFT(factory.createNFT{value: factory.creationFee()}(
-            name, 
-            symbol, 
-            baseURI,
-            address(0) // No referrer for this test
-        ));
+        newNft = StandardNFT(
+            factory.createNFT{value: factory.creationFee()}(
+                name,
+                symbol,
+                baseURI,
+                address(0) // No referrer for this test
+            )
+        );
 
         newNft.safeMint(user); // Mint StandardNFT token ID 0 to user
         vm.stopPrank();
@@ -38,7 +39,6 @@ contract StandardNFTTest is Common {
         assertEq(newNft.tokenURI(0), string(abi.encodePacked(baseURI, "0")), "Token URI should match base URI");
         assertGt(address(factory).balance, 0, "Factory should receive creation fee");
     }
-    
 
     function test_setBaseURI() public {
         string memory newURI = "https://example.com/new_metadata.json/";
@@ -60,7 +60,7 @@ contract StandardNFTTest is Common {
         assertTrue(newNft.isMetadataLocked());
 
         vm.expectRevert();
-        
+
         vm.prank(user);
         newNft.setBaseURI("https://example.com/locked_metadata.json/");
     }

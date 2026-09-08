@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.36;
 
 import "./Common.sol";
 
 contract VestingTest is Common {
-
     function test_initialization() public view {
         assertEq(factory.lockerImplementation(), address(vesting), "Locker implementation should match");
         assertEq(factory.feeCollector(), owner, "Fee Collector should be the owner");
@@ -20,14 +19,11 @@ contract VestingTest is Common {
 
         // Create a locker with native tokens
         vm.prank(user);
-        locker = Vesting(factory.createLocker{value: creationFee + ethAmount}(
-            startTimestamp, 
-            durationSeconds, 
-            true, 
-            address(0), 
-            ethAmount,
-            beneficiary
-        ));
+        locker = Vesting(
+            factory.createLocker{value: creationFee + ethAmount}(
+                startTimestamp, durationSeconds, true, address(0), ethAmount, beneficiary
+            )
+        );
 
         // Check the locker information
         assertEq(locker.start(), startTimestamp, "Start timestamp should match");
@@ -46,14 +42,11 @@ contract VestingTest is Common {
         // Create a locker with ERC20 tokens
         vm.startPrank(user);
         token.approve(address(factory), 1e18); // Approve the factory to spend tokens
-        locker = Vesting(factory.createLocker{value: creationFee}(
-            startTimestamp, 
-            durationSeconds, 
-            false, 
-            address(token), 
-            tokenAmount,
-            beneficiary
-        ));
+        locker = Vesting(
+            factory.createLocker{value: creationFee}(
+                startTimestamp, durationSeconds, false, address(token), tokenAmount, beneficiary
+            )
+        );
         vm.stopPrank();
 
         // Check the locker information
@@ -61,7 +54,7 @@ contract VestingTest is Common {
         assertEq(locker.duration(), durationSeconds, "Duration should match");
         assertEq(locker.owner(), user, "Locker owner should be the user");
         assertEq(token.balanceOf(address(locker)), 1e18, "Locker should hold 1 token");
-    }     
+    }
 
     function test_release_native() public {
         Vesting locker = test_createLocker_isNative(); // Create a locker first
@@ -130,7 +123,4 @@ contract VestingTest is Common {
         uint256 feeCollectorBalance = token.balanceOf(factory.feeCollector());
         assertEq(feeCollectorBalance, 10e18, "Fee Collector should collect the tokens");
     }
-
-    
-
 }

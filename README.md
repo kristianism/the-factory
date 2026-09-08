@@ -1,78 +1,60 @@
-# 🏭 The Factory
+# The Factory
 
-**A comprehensive smart contract factory suite for rapid blockchain deployment of tokens, NFTs, and financial instruments.**
+A smart contract toolkit maintained by [Kristian](https://github.com/kristianism). Create tokens, NFT collections, vesting wallets, airdrops, and staking reward pools with small, readable templates.
 
-The Factory is a modular ecosystem of factory contracts that enable one-click deployment of standardized smart contracts with customizable parameters. Built with security, gas efficiency, and developer experience in mind.
+**This is a contract repository, not a finished no-code application.** Factories create and initialize minimal proxy clones in one transaction. Each clone keeps its implementation permanently. The `Upgradeable` library names refer to initialization support; they do not make these clones upgradeable. The separate FeeCollector uses an owner-controlled UUPS proxy.
 
-## 🌟 Features
+## Choose a template
 
-### 🪙 Token Factories
-- **Standard ERC20**: Deploy feature-complete ERC20 tokens with minting and burning capabilities
-- **Tax Token**: Create ERC20 tokens with configurable transfer taxes and exemption lists
-- Upgradeable implementations using OpenZeppelin's proven patterns
-- Built-in fee collection and treasury management
+| Template | What it does | What the owner can do |
+| --- | --- | --- |
+| Standard ERC20 | Transfer, burn, and approve tokens, including approvals by signature (ERC-2612) | Mint more tokens; transfer or renounce ownership |
+| Tax token | Deduct a transfer tax, rounded up in smallest units | Mint; set tax up to 20%; change exemptions and beneficiary |
+| Standard NFT | Mint ERC721 collectibles with a shared metadata URI | Mint without a supply cap; edit metadata until permanently locked |
+| Vesting wallet | Release native assets or ERC20 tokens over time; duration zero means a timelock | Transfer beneficiary ownership; cannot renounce it |
+| Registration airdrop | Reserve a funded amount for each registered address | Open registration/claims, batch-register, set future allocations, withdraw unallocated surplus |
+| Merkle airdrop | Check inclusion in an off-chain eligibility list before paying | Replace the root and withdraw funds; claims are once per address for the contract's lifetime |
+| Staking reward farm | Distribute externally funded tokens among stakers | Add up to 50 pools, change reward weights/emissions and deposit fees up to 100% |
 
-### 🎨 NFT Factory
-- **Standard NFT**: Deploy ERC721 collections with metadata management
-- Configurable base URI with optional metadata locking
-- Owner-controlled minting with built-in supply tracking
+Amounts are integers in the asset's **smallest unit**. For an 18-decimal token, `1 ether` in Solidity means `1_000_000_000_000_000_000` token units. It does not mean the token has an ETH price. Fees in basis points use 10,000 = 100%.
 
-### 🔒 Vesting & Locking
-- **Token Vesting**: Time-locked token release schedules for team tokens and investor allocations
-- Supports both native ETH and ERC20 token vesting
-- Configurable start times and vesting durations
+Read the [plain-language guide](docs/CONTRACT_GUIDE.md), [security review](docs/SECURITY_REVIEW.md), and [next-template roadmap](docs/ROADMAP.md).
 
-### 🔜 MORE FACTORIES STILL IN DEVELOPMENT!
+## Development
 
-## 🏗️ Architecture
+Pinned versions: Solidity **0.8.36**, OpenZeppelin Contracts and Contracts Upgradeable **5.6.1**, forge-std **1.16.2**, and Foundry **1.7.1** for CI. The EVM target is **Cancun**; confirm the target chain supports it.
 
-The Factory uses a **Clone Factory Pattern** for gas-efficient deployments:
+```sh
+git clone --recurse-submodules https://github.com/kristianism/the-factory.git
+cd the-factory
+npm ci --ignore-scripts
+forge fmt --check
+forge build --sizes
+FOUNDRY_PROFILE=ci forge test -vv
+```
 
-1. **Implementation Contracts**: Immutable logic contracts deployed once
-2. **Factory Contracts**: Create minimal proxy clones of implementations
-3. **Initialization**: Each clone is initialized with custom parameters
-4. **Fee System**: Configurable creation fees collected by treasury
+If you already cloned the repository, run `git submodule update --init --recursive`. Install the pinned Foundry release before running Forge. CI runs on pull requests and pushes and installs the npm dependencies before compilation.
 
-## 🛡️ Security Features
+## Deployment
 
-- **OpenZeppelin Contracts**: Built on battle-tested, audited libraries
-- **Reentrancy Protection**: All state-changing functions protected
-- **Access Control**: Role-based permissions with ownership patterns
-- **Pausable Factories**: Emergency pause functionality
-- **Input Validation**: Comprehensive parameter validation and error handling
+Start with a local chain or testnet. Deploy an implementation, then a factory pointing to that implementation. Factories start paused. Check the implementation code, owner, fee collector, creation fee, referral rate, and target chain before the owner unpauses.
 
-## 📊 Gas Efficiency
+`script/DeployStandardNFT.sol` reads `OWNER`, `COLLECTOR`, `CREATION_FEE`, and `REFERRAL_RATE`. Use a keystore or hardware wallet for signing. Supply `RPC_URL` and explorer settings for your chosen network. The script deliberately leaves the factory paused so the deployment signer need not also be the long-term owner.
 
-The Factory uses several gas optimization techniques:
+For FeeCollector, deploy an `ERC1967Proxy` with initialization calldata in its constructor; do not call `initialize` directly on the locked implementation. Its owner can replace the collection logic. A multisig is a suitable owner if several people share responsibility.
 
-- **Minimal Proxy Pattern**: ~2,000 gas per deployment vs. full contract deployment
-- **Packed Structs**: Optimized storage layouts
-- **Batch Operations**: Multi-token operations in single transaction
-- **Event Optimization**: Efficient event emission patterns
+These patches require **new implementations and factories**. Existing clones cannot be patched in place. Existing FeeCollector proxies have not been cleared for a live upgrade; compare storage layouts and simulate migration separately. [Addresses and deployment history](ADDRESSES.md).
 
-## 🤝 Contributing
+## Limits and permissions
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+- Factory owners control future creation fees and pausing; this does not pause existing clones.
+- Ownership uses two-step acceptance in factories, tokens, NFTs, airdrops, farms, and FeeCollector. Vesting uses the underlying wallet's ownership transfer.
+- The farm requires distinct staking and reward assets. Transfer-taxed, rebasing, or otherwise nonstandard assets are unsupported. Taxed incoming stake transfers are rejected.
+- Unpaid farm rewards remain claimable after funding arrives. They are liabilities, not a guarantee of future payment. Emergency withdrawal forfeits rewards.
+- Open registration is per address, not per person. It provides no Sybil protection.
+- A code-bearing implementation address is necessary, but does not prove the implementation is correct. Use the reviewed template and record its code hash.
+- Tests and this review do not constitute an independent audit or a guarantee against losses.
 
-### Development Setup
+## License
 
-1. Fork the repository
-2. Create a feature branch
-3. Make changes with tests
-4. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the Business Source License 1.1 - see the [LICENSE](LICENSE) file for details.
-
-## 🔗 Links
-
-- **Website**: [https://www.sonicfactory.dev/]
-- **Documentation**: [https://sonicfactory.gitbook.io/docs/]
-- **Telegram**: [https://t.me/FactorySonic]
-- **Discord**: [https://discord.gg/KSv7z4gDDN]
-- **Twitter**: [https://x.com/FactorySonic]
-
----
-
-Built with ❤️ by the Sonic Factory team
+The repository retains its existing [LICENSE](LICENSE) and [trademark notice](TRADEMARKS.md). Product branding has been replaced, but this change does not relicense the inherited source or remove its restrictions. Do not describe this release as permissively licensed open source. Rights and a suitable license for broader production use need to be resolved separately.

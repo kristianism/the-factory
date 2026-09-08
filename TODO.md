@@ -1,24 +1,9 @@
-### TODO List
+# The Factory roadmap
 
-## High Priority
-- [x] Convert the `StandardNFT` contract to have a `collectFee` function or make a separate smart contract for this that is imported into all the factories.
-- [x] Revise the `FeeCollector` contract logic that stores or takes an array of factory address inputs. The list of factory addresses can be stored off-chain for more efficiency.
-- [x] In line with the `FeeCollector`, consider creating a variable for `pendingFees` or a simple balance check and a getter function for it.
-- [x] Pattern the getter functions of VestingFactory to all existing and new factories.
-- [x] Fix all existing contracts to properly reflect the structure modularity.
-- [x] Double check all the contracts if the modularization has been implemented correctly.
-- [x] Introduce a referral module in the factory contracts or in the FeeCollector contract.
-- [x] Implement the referral module in all the factory contracts.
-- [] Add another contract attached to the treasury for yield mechanism that depends on a percentage of income by the platform.
+See [docs/ROADMAP.md](docs/ROADMAP.md) for proposed templates and [docs/SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md) for the review and remaining release work.
 
-## Medium Priority
-- [x] Deploy the `StandardNFT` contract at Sonic Mainnet.
-- [] Deploy the `StandardYieldFarm` module at Sonic Testnet.
-- [] Add an Airdrop Factory
-- [] Create modules for `Omnichain` contracts.
-
-## Low Priority
-- [] Prediction Market Factory?
-- [] Dice Factory?
-- [] Stablecoin Factory?
-- [] Lending Factory?
+- [ ] Review and merge the security patch after independent review.
+- [ ] Resolve the repository's licensing terms for the intended public-access model.
+- [ ] Test new deployments on the selected network; record bytecode and constructor arguments.
+- [ ] Build a plain-language deployment interface with previews of units, fees, and owner powers.
+- [ ] Add a fixed-supply token template first, followed by payment splitting and ERC1155.
