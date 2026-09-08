@@ -1,8 +1,7 @@
 //SPDX-License-Identifier: BSL 1.1
-pragma solidity 0.8.28;
+pragma solidity 0.8.36;
 
 abstract contract CommonErrors {
-
     /**
      * COMMON ERRORS
      */
@@ -22,5 +21,4 @@ abstract contract CommonErrors {
     error InputCannotBeNull();
     /// @notice Thrown when the contract has insufficient funds.
     error InsufficientFunds();
-    
 }

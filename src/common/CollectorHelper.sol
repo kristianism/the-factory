@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: BSL 1.1
-pragma solidity 0.8.28;
+pragma solidity 0.8.36;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -9,19 +9,16 @@ import {CommonEvents} from "@common/CommonEvents.sol";
 
 /**
  * @title Collector Helper
- * @notice Extension contract for fee collection related functions 
+ * @notice Extension contract for fee collection related functions
  */
-abstract contract CollectorHelper is 
-    CommonErrors,
-    CommonEvents
-{
+abstract contract CollectorHelper is CommonErrors, CommonEvents {
     using SafeERC20 for IERC20;
 
     /// @notice The address that collects the fees.
     address public feeCollector;
 
     /// @notice Modifier to check if the caller is the collector.
-    modifier onlyCollector {
+    modifier onlyCollector() {
         require(msg.sender == feeCollector, InvalidCollector());
         _;
     }
@@ -30,20 +27,20 @@ abstract contract CollectorHelper is
     /// @param _feeCollector The address of the fee collector.
     constructor(address _feeCollector) {
         if (_feeCollector == address(0)) revert ZeroAddress();
-        
+
         feeCollector = _feeCollector;
-        
+
         emit FeeCollectorUpdated(_feeCollector);
     }
 
     /// @notice This function allows the owner to collect the contract balance.
     /// @dev Factories should expose a privileged wrapper for this function.
     function _collectFees() internal {
-        if(feeCollector == address(0)) revert ZeroAddress();
-        if(address(this).balance == 0) revert ZeroAmount();
+        if (feeCollector == address(0)) revert ZeroAddress();
+        if (address(this).balance == 0) revert ZeroAmount();
 
         uint256 balance = address(this).balance;
-        (bool success, ) = feeCollector.call{value: balance}("");
+        (bool success,) = feeCollector.call{value: balance}("");
         require(success, "Failed to send Ether");
 
         emit FeesCollected(feeCollector, balance);
@@ -53,8 +50,8 @@ abstract contract CollectorHelper is
     /// @dev Factories should expose a privileged wrapper for this function.
     /// @param token The address of the token to collect.
     function _collectTokens(address token) internal {
-        if(token == address(0)) revert ZeroAddress();
-        if(IERC20(token).balanceOf(address(this)) == 0) revert ZeroAmount();
+        if (token == address(0)) revert ZeroAddress();
+        if (IERC20(token).balanceOf(address(this)) == 0) revert ZeroAmount();
 
         uint256 balance = IERC20(token).balanceOf(address(this));
         IERC20(token).safeTransfer(feeCollector, balance);

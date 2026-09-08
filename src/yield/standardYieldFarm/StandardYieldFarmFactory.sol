@@ -1,8 +1,9 @@
 //SPDX-License-Identifier: BSL 1.1
-pragma solidity 0.8.28;
+pragma solidity 0.8.36;
 
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
@@ -17,12 +18,7 @@ import {CollectorHelper} from "@common/CollectorHelper.sol";
  * @notice This is a factory for creating Standard Yield Farm contracts.
  * @dev Proxy implementation are Clones. Implementation is immutable and not upgradeable.
  */
-contract StandardYieldFarmFactory is 
-    Ownable,
-    Pausable, 
-    ReentrancyGuard,
-    CollectorHelper
-{
+contract StandardYieldFarmFactory is Ownable2Step, Pausable, ReentrancyGuard, CollectorHelper {
     using SafeERC20 for IERC20;
 
     /// @notice Thrown when the start timestamp is not in the future
@@ -50,8 +46,6 @@ contract StandardYieldFarmFactory is
 
     /// @notice The address of the standard yield farm implementation contract.
     address public immutable yieldFarmImplementation;
-    /// @notice The address of the standard token implementation contract.
-    address public immutable tokenImplementation;
     /// @notice The fee to create a new yield farm.
     uint256 public creationFee;
     /// @notice The number of yield farms created.
@@ -71,14 +65,13 @@ contract StandardYieldFarmFactory is
      * @param _feeCollector The address that will collect the creation fees.
      * @param _creationFee The amount to collect for every contract creation.
      */
-    constructor(
-        address _yieldFarmImplementation,
-        address _initialOwner,
-        address _feeCollector,
-        uint256 _creationFee
-    ) Ownable(_initialOwner) CollectorHelper(_feeCollector) {
-        if(_yieldFarmImplementation == address(0)) revert ZeroAddress();
+    constructor(address _yieldFarmImplementation, address _initialOwner, address _feeCollector, uint256 _creationFee)
+        Ownable(_initialOwner)
+        CollectorHelper(_feeCollector)
+    {
+        if (_yieldFarmImplementation == address(0)) revert ZeroAddress();
 
+        if (_yieldFarmImplementation.code.length == 0) revert InvalidImplementationAddress();
         yieldFarmImplementation = _yieldFarmImplementation;
         creationFee = _creationFee;
 
@@ -94,27 +87,22 @@ contract StandardYieldFarmFactory is
      * @param _feeAddress The address that will receive the deposit fees.
      * @param _rewardPerSecond The amount of reward tokens distributed per second.
      * @param _startTimestamp The timestamp when the yield farm starts.
-    */
+     */
     function createYieldFarm(
         IERC20 _rewardToken,
         address _feeAddress,
         uint256 _rewardPerSecond,
         uint256 _startTimestamp
     ) external payable whenNotPaused nonReentrant returns (address payable yieldFarm) {
-        if(_startTimestamp < block.timestamp) revert InvalidTimestamp();
-        if(msg.value < creationFee) revert InvalidFee();
+        if (_startTimestamp < block.timestamp) revert InvalidTimestamp();
+        if (msg.value < creationFee) revert InvalidFee();
 
         yieldFarmCounter = yieldFarmCounter + 1;
 
         yieldFarm = payable(Clones.clone(yieldFarmImplementation));
 
-        StandardYieldFarm(yieldFarm).initialize(
-            _rewardToken,
-            msg.sender,
-            _feeAddress,
-            _rewardPerSecond,
-            _startTimestamp
-        );
+        StandardYieldFarm(yieldFarm)
+            .initialize(_rewardToken, msg.sender, _feeAddress, _rewardPerSecond, _startTimestamp);
 
         IdToAddress[yieldFarmCounter] = yieldFarm;
         creatorToYieldFarms[msg.sender].push(yieldFarm);
@@ -131,34 +119,45 @@ contract StandardYieldFarmFactory is
         // Refund excess ETH if any.
         uint256 excessNative = msg.value - creationFee;
         if (excessNative > 0) {
-            (bool excessSuccess, ) = msg.sender.call{value: excessNative}("");
+            (bool excessSuccess,) = msg.sender.call{value: excessNative}("");
             require(excessSuccess, "Failed to refund excess ETH");
         }
 
-        emit YieldFarmCreated(
-            yieldFarm,
-            msg.sender,
-            _feeAddress,
-            _rewardPerSecond, 
-            _startTimestamp,
-            yieldFarmCounter
-        );
+        emit YieldFarmCreated(yieldFarm, msg.sender, _feeAddress, _rewardPerSecond, _startTimestamp, yieldFarmCounter);
+    }
+
+    /// @notice Collect creation fees to the configured collector.
+    function collectFees() external onlyCollector nonReentrant {
+        _collectFees();
+    }
+
+    /// @notice Recover accidentally sent tokens to the collector.
+    function collectTokens(address token) external onlyOwner nonReentrant {
+        _collectTokens(token);
+    }
+
+    function setFeeCollector(address collector) external onlyOwner nonReentrant {
+        _setFeeCollector(collector);
+    }
+
+    function getTotalYieldFarms() external view returns (uint256) {
+        return yieldFarmCounter;
     }
 
     /// @notice This function sets the creation fee.
     /// @param _creationFee The amount to set as the creation fee.
-    function setCreationFee(uint256 _creationFee) external onlyOwner {       
+    function setCreationFee(uint256 _creationFee) external onlyOwner nonReentrant {
         creationFee = _creationFee;
         emit CreationFeeUpdated(_creationFee);
     }
 
     /// @notice This function allows the owner to pause the contract.
-    function pause() external onlyOwner {
+    function pause() external onlyOwner nonReentrant {
         _pause();
     }
 
     /// @notice This function allows the owner to unpause the contract.
-    function unpause() external onlyOwner {
+    function unpause() external onlyOwner nonReentrant {
         _unpause();
     }
 
@@ -188,6 +187,6 @@ contract StandardYieldFarmFactory is
     /// @notice Validates if the yield farm address is valid.
     /// @param yieldFarm The address of the yield farm to validate.
     function isValidYieldFarm(address yieldFarm) external view returns (bool) {
-        return yieldFarmInfo[yieldFarm].yieldFarmAddress == yieldFarm;
+        return yieldFarm != address(0) && yieldFarmInfo[yieldFarm].yieldFarmAddress == yieldFarm;
     }
 }

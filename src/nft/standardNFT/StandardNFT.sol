@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BSL 1.1
-pragma solidity 0.8.28;
+pragma solidity 0.8.36;
 
 import {ERC721Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
-import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import {Ownable2StepUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 
 import {CommonErrors} from "@common/CommonErrors.sol";
 import {CommonEvents} from "@common/CommonEvents.sol";
@@ -12,14 +12,7 @@ import {CommonEvents} from "@common/CommonEvents.sol";
  * @title Standard NFT
  * @notice This contract is a standard ERC721 implementation
  */
-contract StandardNFT is 
-    Initializable,
-    ERC721Upgradeable,
-    OwnableUpgradeable,
-    CommonErrors,
-    CommonEvents
-{
-
+contract StandardNFT is Initializable, ERC721Upgradeable, Ownable2StepUpgradeable, CommonErrors, CommonEvents {
     /// @notice Error thrown when metadata is locked.
     error MetadataAlreadyLocked();
 
@@ -43,16 +36,12 @@ contract StandardNFT is
     /// @param _symbol The symbol of the NFT.
     /// @param baseURI The base URI for the NFT metadata.
     /// @param _initialOwner The initial owner of the NFT.
-    function initialize(
-        string memory _name,
-        string memory _symbol,
-        string memory baseURI,
-        address _initialOwner
-    )
+    function initialize(string memory _name, string memory _symbol, string memory baseURI, address _initialOwner)
         public
         initializer
     {
         __ERC721_init(_name, _symbol);
+        __Ownable2Step_init();
         __Ownable_init(_initialOwner);
 
         _baseTokenURI = baseURI;
@@ -67,14 +56,14 @@ contract StandardNFT is
 
     /// @notice Updates base URI (only if not locked)
     function setBaseURI(string memory baseURI) external onlyOwner {
-        if(metadataLocked) revert MetadataAlreadyLocked();
+        if (metadataLocked) revert MetadataAlreadyLocked();
 
         _baseTokenURI = baseURI;
     }
 
     /// @notice Permanently locks metadata (irreversible).
     function lockMetadata() external onlyOwner {
-        if(metadataLocked) revert MetadataAlreadyLocked();
+        if (metadataLocked) revert MetadataAlreadyLocked();
 
         metadataLocked = true;
 
@@ -96,5 +85,4 @@ contract StandardNFT is
     function _baseURI() internal view override returns (string memory) {
         return _baseTokenURI;
     }
-
 }
