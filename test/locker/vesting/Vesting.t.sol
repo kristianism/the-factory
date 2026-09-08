@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.36;
 
-import "./Common.sol";
+import {Common} from "./Common.sol";
+import {Vesting} from "@vesting/Vesting.sol";
 
 contract VestingTest is Common {
     function test_initialization() public view {

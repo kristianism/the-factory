@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.36;
 
-import "forge-std/Script.sol";
-import "forge-std/console.sol";
+import {Script} from "forge-std/Script.sol";
+import {console} from "forge-std/console.sol";
 
-import "@standardNFT/StandardNFT.sol";
-import "@standardNFT/StandardNFTFactory.sol";
+import {StandardNFT} from "@standardNFT/StandardNFT.sol";
+import {StandardNFTFactory} from "@standardNFT/StandardNFTFactory.sol";
 
 contract Deploy is Script {
     // Command line input

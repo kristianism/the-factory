@@ -1,11 +1,10 @@
-//SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.36;
 
-import "forge-std/Test.sol";
-import "forge-std/console.sol";
+import {Test} from "forge-std/Test.sol";
 
-import "@taxToken/TaxToken.sol";
-import "@taxToken/TaxTokenFactory.sol";
+import {TaxToken} from "@taxToken/TaxToken.sol";
+import {TaxTokenFactory} from "@taxToken/TaxTokenFactory.sol";
 
 contract TaxTokenTest is Test {
     address public owner = makeAddr("owner");

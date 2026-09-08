@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.36;
 
-import "./Common.sol";
+import {Common} from "./Common.sol";
+import {StandardNFT} from "@standardNFT/StandardNFT.sol";
 
 contract StandardNFTTest is Common {
     function test_factoryDeployment() public view {

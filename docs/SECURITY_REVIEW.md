@@ -1,5 +1,7 @@
 # Security review and patch record
 
+Historical security-patch review. A subsequent owner-authorized cleanup changes the project license to MIT and removes the former trademark-policy file. The findings and test results below describe the reviewed patch.
+
 Reviewed on 2026-09-08 against repository commit `8263adf5b5087489fb429e9c57b936c3e9b6c0bd`.
 
 Scope: all first-party Solidity sources, factories, deployment scripts, tests, dependencies, and project documentation in that snapshot. Source files were retrieved through the authorized GitHub connection and checked against their Git blob hashes. This was a manual code review with local Foundry regression and fuzz testing. Codex Security was listed as installed but exposed no callable scanner in the session; no Codex Security scan, independent audit, formal verification, or live-chain validation is claimed.
@@ -56,7 +58,7 @@ Patched validation:
 - The deposit-fee fuzz test ran **1,000 cases**, comparing recorded user stake, total stake, and actual token balance through deposit and withdrawal.
 - `forge build --sizes`: passed. Largest first-party production runtime: **StandardYieldFarm, 7,798 bytes**, below the 24,576-byte EVM contract limit.
 - `forge fmt --check` and `git diff --check`: passed.
-- Branding search: no old product names/links in active source or product documentation. Existing LICENSE and TRADEMARKS.md were preserved verbatim. Historical network names/addresses remain explicitly labeled as unverified deployment history.
+- At the time of the security patch, branding searches excluded the then-existing legal notices. The subsequent owner-authorized cleanup adopts MIT and removes the former trademark-policy file. Historical network names/addresses remain explicitly labeled as unverified deployment history.
 - Compiler/linter notices about intentional timestamp-based vesting/rewards and test-token return handling are not proof of a vulnerability. Compiler warning 6335 is suppressed for forward-compatibility identifier notices in pinned dependencies.
 
 Toolchain: Foundry 1.7.1, Solidity 0.8.36, Cancun EVM target, optimizer 200 runs, OpenZeppelin 5.6.1, forge-std 1.16.2 (`bf647bd6046f2f7da30d0c2bf435e5c76a780c1b`). CI installs the locked npm dependencies and runs on pushes and pull requests.
@@ -68,7 +70,7 @@ Toolchain: Foundry 1.7.1, Solidity 0.8.36, Cancun EVM target, optimizer 200 runs
 3. Owners retain the disclosed minting, metadata, tax, allocation, deposit-fee, airdrop, and treasury-upgrade powers. A 100% deposit fee is possible and must be shown by any frontend. Merkle owners can still change the root or withdraw tokens; this review did not silently replace that policy. Open registration is vulnerable to multiple-wallet participation by design.
 4. Existing clones are immutable and need replacement deployments. New FeeCollector behavior has only been tested on freshly initialized proxies. No storage-layout approval or migration simulation for an existing proxy was performed.
 5. No contracts were deployed, no transactions were sent on-chain, and historical addresses were not checked against live bytecode. Check the actual target network's Cancun support and verify deployed source separately.
-6. LICENSE and TRADEMARKS.md still contain the prior project's legal identifiers. Changing branding does not grant additional usage rights. The intended broadly accessible production model needs a separate licensing decision by the rights holder.
+6. Resolved by subsequent owner instruction: the project now uses the MIT license. Third-party dependencies keep their respective licenses and notices.
 7. The GitHub repository's About description still contains the old branding. The connected tools do not expose repository-metadata editing. Suggested replacement: **Readable smart contract factories for tokens, NFTs, vesting, airdrops, and staking.**
 
 ## Primary references

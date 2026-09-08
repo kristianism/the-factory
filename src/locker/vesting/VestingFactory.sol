@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BSL 1.1
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.36;
 
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
@@ -8,7 +8,9 @@ import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import {Vesting} from "@vesting/Vesting.sol";
-import {CollectorHelper, SafeERC20, IERC20} from "@common/CollectorHelper.sol";
+import {CollectorHelper} from "@common/CollectorHelper.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Referral} from "@common/Referral.sol";
 
 /**

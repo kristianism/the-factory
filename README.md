@@ -57,4 +57,6 @@ These patches require **new implementations and factories**. Existing clones can
 
 ## License
 
-The repository retains its existing [LICENSE](LICENSE) and [trademark notice](TRADEMARKS.md). Product branding has been replaced, but this change does not relicense the inherited source or remove its restrictions. Do not describe this release as permissively licensed open source. Rights and a suitable license for broader production use need to be resolved separately.
+[MIT](LICENSE). Copyright (c) 2025-2026 Kristian (kristianism).
+
+Third-party dependencies retain their own licenses and copyright notices.
